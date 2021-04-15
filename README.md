@@ -1,41 +1,64 @@
-js-to-fhirpath is a syntax parser that converts normal mathematical expressions
+# Math-to-fhirpath
+
+Math-to-fhirpath is a syntax parser that converts basic mathematical expressions
 into FHIRpath notation. 
 
-USAGE
+# Local Installation
 
-Normal syntax expressions utilize traditional operators and function statements.
+```bash
+npm install
+```
+
+To test that math-to-fhirpath is working correctly:
+
+```bash
+npm test
+```
+
+# Usage
+
+```javascript
+import mathtofhirpath
+mathtofhirpath.fhirconvert("(a+b)^2", [a, b]); // returns ($a+$b).power(2)
+mathtofhirpath.fhirconvert("CEILING(a*b)", [a, b]); // returns ($a*$b).ceiling()
+```
+
+***fhirconvert*** is the main function of math-to-fhirpath, which validates and converts an
+inputted expression to fhirpath. fhirconvert will also return null if the expression fails validation.
+
+
+fhirconvert takes in two inputs: the mathematical expression for conversion and 
+an array of usable variables. The format is as follows:
+
+```javascript
+fhirconvert([expression], [vars])
+```
+
+Basic syntax expressions utilize traditional operators and function statements.
 Expressions can be written using variable names, mathematical operators, and various
-functions. 
+functions. The syntax guide is bellow.
 
-In addition to passing in the expression, an array of usable variables must
-also be passed as a parameter.
+# Syntax Guide
 
-USABLE OPERATORS: +, -, *, /, ^, **
-USABLE FUNCTIONS: 
-CEILING(), FLOOR(), ABS(), LOG(), TRUNCATE(), EXP(), SQRT(), LN()
-    -Usage: CEILING([expression]), FLOOR([expression])
-LOG()
-    -Usage: LOG([Base], [Value])
-USABLE VARIABLES: Any string of letters and numbers differing from the aforementioned functions.
+***USABLE OPERATORS:*** +, -, *, /, ^, **, !=, !~, >=, <=, =, &&, ||, xor, and, or, implies
 
-EXAMPLE EXPRESSIONS:
+***USABLE FUNCTIONS:***
+CEILING(), FLOOR(), ABS(), LOG(), TRUNCATE(), EXP(), SQRT(), LN(), NOT()  
+* Usage: CEILING([expression]), FLOOR([expression]), etc.
+
+LOG()  
+* Usage: LOG([Base], [Value])
+    
+***USABLE VARIABLES:***
+Any string of letters and numbers differing from the aforementioned functions.
+
+***EXAMPLE EXPRESSIONS (vars: [a, b, c]):***
 2+2
 (a+b)^3
 CEILING(LOG(2, 17))
 TRUNCATE(ABS(-3.3)) + SQRT(LN(a+b+c))
 
-The function fhirconvert takes an inputted normal expression as a string
-and converts it into FHIRpath syntax. This also includes validating variable and 
-functions usage and prefixing all variables with "%". 
-
-It is used in the following format: fhirconvert([expression], [vars])
-Where the expression is a String in normal syntax and vars is an array
-of usable variables. It returns a string representing a converted
-FHIRpath expression.
-
-fhirconvert will return null if the expression fails validation.
-
-EXAMPLE EXPRESSION OUTPUTS:
+# EXAMPLE OUTPUTS:
 
 INPUT: fhirconvert("2+2", [a, b, c, d])
 OUTPUT: "2+2"

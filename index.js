@@ -6,11 +6,80 @@
  */
  export function fhirconvert(str, vars) {
   if (validate(str, vars)) {
-    return varfind(convert(str.trim()), vars);
+    return varfind(convert(str), vars);
   } else {
     return null;
   }
 }
+
+// Array of usable operators
+let ops = [
+  "+",
+  "-",
+  "*",
+  "/",
+  "^",
+  "**",
+  "||",
+  "&&",
+  "<",
+  ">",
+  "=",
+  "!=",
+  "!~",
+  ">=",
+  "<=",
+  "xor",
+  "XOR",
+  "implies",
+  "IMPLIES",
+  "and",
+  "or",
+  "AND",
+  "OR"
+];
+
+// Array of usable functions
+let funs = [
+  "CEILING",
+  "FLOOR",
+  "ABS",
+  "TRUNCATE",
+  "EXP",
+  "SQRT",
+  "LN",
+  "LOG",
+  "ceiling",
+  "floor",
+  "abs",
+  "truncate",
+  "exp",
+  "sqrt",
+  "ln",
+  "log",
+  "NOT",
+  "not",
+];
+
+// Array of functions with no arguments
+let funs2 = [
+  "CEILING",
+  "FLOOR",
+  "ABS",
+  "TRUNCATE",
+  "EXP",
+  "SQRT",
+  "LN",
+  "NOT",
+  "ceiling",
+  "floor",
+  "abs",
+  "truncate",
+  "exp",
+  "sqrt",
+  "ln",
+  "not"
+];
 
 /**
  * Verifies normal syntax by confirming var names, function names,
@@ -20,28 +89,64 @@
  * @returns boolean, valid or invalid
  */
 export function validate(str, vars) {
+  // Operator Validation
   var len = str.length;
-  let funs = [
-    "CEILING",
-    "FLOOR",
-    "ABS",
-    "TRUNCATE",
-    "EXP",
-    "SQRT",
-    "LN",
-    "LOG",
-    "ceiling",
-    "floor",
-    "abs",
-    "truncate",
-    "exp",
-    "sqrt",
-    "ln",
-    "log"
-  ];
+  var op = "";
+  // Loop to identify operator strings
+  for (var j = 0; j < len; j++) {
+    // If operator char, append to op
+    if (!(/[a-zA-Z0-9.,\s()\\-]/.test(str[j]))) {
+      op = op + str[j];
+      if (j == len - 1 || j == 0) {
+        return false;
+      }
+    }
+    // Checks operator if length > 1 and operator string ends
+    else if (op.length > 0) {
+      if (!(ops.includes(op))) {
+        return false;
+      }
+      // Validates expression to left of operator
+      var lsearch = true;
+      var op_l = j - op.length - 1;
+      while(lsearch) {
+        if (!(/[\s]/.test(str[op_l]))) {
+          if (!(/[a-zA-Z0-9.,)\\-]/.test(str[op_l]))) {
+            return false;
+          }
+          lsearch = false;
+        } else {
+          op_l -= 1;
+        }
+      }
+      // Validates expression to right of operator
+      var rsearch = true;
+      var op_r = j;
+      if (op_r > len - 1) {
+        return false;
+      }
+      while(rsearch) {
+        if (!(/[\s]/.test(str[op_r]))) {
+          if (!(/[a-zA-Z0-9.(\\-]/.test(str[op_r]))) {
+            return false;
+          }
+          rsearch = false;
+        } else {
+          op_r += 1;
+        }
+      }
+      op = "";
+    }
+    else {
+      op = "";
+    }
+  }
+
+  // Function validation
   var lcount = 0;
   var rcount = 0;
   var substr = "";
+  // Loop to checks parenthesis and identify non-operator strings
   for (var i = 0; i < len; i++) {
     if (str[i] == "(") {
       lcount += 1;
@@ -52,11 +157,15 @@ export function validate(str, vars) {
     if (rcount > lcount) {
       return false;
     }
-    if (/[a-z]|[A-Z]/.test(str[i])) {
+    // If usable char, add to substring
+    if (/[a-zA-Z0-9]/.test(str[i])) {
       substr = substr + str[i];
     }
-    if (str[i + 1] == null || !/[a-zA-Z]/.test(str[i + 1])) {
-      if (funs.includes(substr) || vars.includes(substr) || substr == "") {
+    // Checks if substring is valid
+    if ((str[i + 1] == null || !(/[[a-zA-Z0-9]/.test(str[i + 1])))) {
+      if ((funs.includes(substr) && str[i + 1] == "(") || substr == "") {
+        substr = "";
+      } else if (vars.includes(substr) || (ops.includes(substr) || !(isNaN(substr)))) {
         substr = "";
       } else {
         return false;
@@ -72,22 +181,6 @@ export function validate(str, vars) {
  * @returns expression with converted functions
  */
 export function convert(str) {
-  let funs = [
-    "CEILING",
-    "FLOOR",
-    "ABS",
-    "TRUNCATE",
-    "EXP",
-    "SQRT",
-    "LN",
-    "ceiling",
-    "floor",
-    "abs",
-    "truncate",
-    "exp",
-    "sqrt",
-    "ln"
-  ];
   var count = 0;
   if (str.includes("^")) {
     var i = str.indexOf("^");
@@ -95,9 +188,9 @@ export function convert(str) {
     var power = rfind(str, i);
     str =
       str.slice(0, i - base.length) +
-      base +
+      base.trim() +
       ".power(" +
-      power +
+      power.trim() +
       ")" +
       str.slice(i + power.length + 1);
     count += 1;
@@ -108,17 +201,17 @@ export function convert(str) {
     var power = rfind(str, i+1);
     str =
       str.slice(0, i - base.length) +
-      base +
+      base.trim() +
       ".power(" +
-      power +
+      power.trim() +
       ")" +
       str.slice(i + power.length + 2);
     count += 1;
   }
-  for (let f = 0; f < funs.length; f++) {
-    if (str.includes(funs[f])) {
-      if (str[str.indexOf(funs[f]) - 1] != ".") {
-        str = funcappend(str, funs[f]);
+  for (let f = 0; f < funs2.length; f++) {
+    if (str.includes(funs2[f])) {
+      if (str[str.indexOf(funs2[f]) - 1] != ".") {
+        str = funcappend(str, funs2[f]);
         count += 1;
       }
     }
@@ -132,6 +225,22 @@ export function convert(str) {
       str = logappend(str, "log");
       count += 1;
     }
+  }
+  if (str.includes("OR")) {
+    str = str.replace("OR", "or");
+    count += 1;
+  }
+  if (str.includes("AND")) {
+    str = str.replace("AND", "and");
+    count += 1;
+  }
+  if (str.includes("||")) {
+    str = str.replace("||", "or");
+    count += 1;
+  }
+  if (str.includes("&&")) {
+    str = str.replace("&&", "and");
+    count += 1;
   }
   if (count != 0) {
     return convert(str);
@@ -236,7 +345,7 @@ export function lfind(str, i) {
       if (i < 2) {
         search = false;
       }
-      if (/[a-z]|[A-Z]|[0-9]|[.]|[-]/.test(str[i - 1])) {
+      if (/[a-zA-Z0-9.-\s]/.test(str[i - 1])) {
         lstr = str[i - 1] + lstr;
         i -= 1;
       } else {
@@ -281,7 +390,7 @@ export function rfind(str, i) {
       if (str[i + 2] == undefined) {
         search = false;
       }
-      if (/[a-z]|[A-Z]|[0-9]|[.]|[-]/.test(str[i + 1])) {
+      if (/[a-zA-Z0-9.\s()\\-]/.test(str[i + 1])) {
         rstr = rstr + str[i + 1];
         i += 1;
       } else {
@@ -309,7 +418,7 @@ export function varfind(str, vars) {
     if (str[i] == null) {
       end = true;
     } else {
-      if (/[a-z]|[A-Z]|[0-9]/.test(str[i])) {
+      if (/[a-zA-Z0-9]/.test(str[i])) {
         v = v + str[i];
       } else {
         j = i - v.length;
@@ -329,6 +438,5 @@ export function varfind(str, vars) {
       i += 1;
     }
   }
-
   return str;
 }
