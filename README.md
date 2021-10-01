@@ -1,7 +1,7 @@
-# Math-to-fhirpath
+# Easy Path Expressions
 
-Math-to-fhirpath is a syntax parser that converts basic mathematical expressions
-into FHIRpath notation. 
+Easy-path-expressions is a syntax parser that converts basic mathematical
+expressions into FHIRPath notation. 
 
 # Local Installation
 
@@ -9,7 +9,7 @@ into FHIRpath notation.
 npm install
 ```
 
-To test that math-to-fhirpath is working correctly:
+To test that easy-path-expressions is working correctly:
 
 ```bash
 npm test
@@ -18,12 +18,12 @@ npm test
 # Usage
 
 ```javascript
-import mathtofhirpath
-mathtofhirpath.fhirconvert("(a+b)^2", [a, b]); // returns ($a+$b).power(2)
-mathtofhirpath.fhirconvert("CEILING(a*b)", [a, b]); // returns ($a*$b).ceiling()
+import * as easyPathExpressions from 'easy-path-expressions';
+easyPathExpressions.fhirconvert("(a+b)^2", [a, b]); // returns ($a+$b).power(2)
+easyPathExpressions.fhirconvert("CEILING(a*b)", [a, b]); // returns ($a*$b).ceiling()
 ```
 
-***fhirconvert*** is the main function of math-to-fhirpath, which validates and converts an
+***fhirconvert*** is the main function of easy-path-expressions, which validates and converts an
 inputted expression to fhirpath. fhirconvert will also return null if the expression fails validation.
 
 
