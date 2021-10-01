@@ -1,7 +1,7 @@
 # Easy Path Expressions
 
 Easy-path-expressions is a syntax parser that converts basic mathematical
-expressions into FHIRPath notation. 
+expressions into [FHIRPath](https://hl7.org/fhirpath/) notation. 
 
 # Local Installation
 
@@ -19,8 +19,8 @@ npm test
 
 ```javascript
 import * as easyPathExpressions from 'easy-path-expressions';
-easyPathExpressions.fhirconvert("(a+b)^2", [a, b]); // returns ($a+$b).power(2)
-easyPathExpressions.fhirconvert("CEILING(a*b)", [a, b]); // returns ($a*$b).ceiling()
+easyPathExpressions.fhirconvert("(a+b)^2", ["a", "b"]); // returns ($a+$b).power(2)
+easyPathExpressions.fhirconvert("CEILING(a*b)", ["a", "b"]); // returns ($a*$b).ceiling()
 ```
 
 ***fhirconvert*** is the main function of easy-path-expressions, which validates and converts an
