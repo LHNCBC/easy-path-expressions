@@ -209,4 +209,34 @@ describe("#fhirconvert()", function () {
       expect(fhir.fhirconvert("Patient1 + Age3", vars3)).to.equal("%Patient1 + %Age3");
     });
   });
+
+  context("Strings", function () {
+    it("simple", function () {
+      expect(fhir.validate("'Test'", [])).to.be.true;
+      expect(fhir.fhirconvert("'Test'", [])).to.equal("'Test'");
+      expect(fhir.validate("'Test\\'1'", [])).to.be.true;
+      expect(fhir.fhirconvert("'Test\\'1'", [])).to.equal("'Test\\'1'");
+      expect(fhir.validate("'a' + 'b'", [])).to.be.true;
+      expect(fhir.fhirconvert("'a' + 'b'", [])).to.equal("'a' + 'b'");
+    });
+
+    it("with vars", function () {
+      expect(fhir.fhirconvert("a + 'b'", vars)).to.equal("%a + 'b'");
+      expect(fhir.fhirconvert("'a' + b", vars)).to.equal("'a' + %b");
+      expect(fhir.fhirconvert("Patient + '1'", vars2)).to.equal("%Patient + '1'");
+      expect(fhir.fhirconvert("Patient+'1'", vars2)).to.equal("%Patient+'1'");
+      expect(fhir.fhirconvert("'a' + Patient", vars2)).to.equal("'a' + %Patient");
+      expect(fhir.fhirconvert("'a'+Patient", vars2)).to.equal("'a'+%Patient");
+    });
+
+    it("operations", function () {
+      expect(fhir.fhirconvert("'a' = 'b'", [])).to.equal("'a' = 'b'");
+      expect(fhir.fhirconvert("'a'='b'", [])).to.equal("'a'='b'");
+      expect(fhir.fhirconvert("'a' = 'a'", [])).to.equal("'a' = 'a'");
+      expect(fhir.fhirconvert("'a'='a'", [])).to.equal("'a'='a'");
+      expect(fhir.fhirconvert("LENGTH('Test')", [])).to.equal("('Test').length()");
+      expect(fhir.fhirconvert("LENGTH('a' + 'bc')", [])).to.equal("('a' + 'bc').length()");
+      expect(fhir.fhirconvert("LENGTH('a'+'bc')", [])).to.equal("('a'+'bc').length()");
+    });
+  });
 });

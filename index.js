@@ -49,6 +49,8 @@ let funs = [
   "SQRT",
   "LN",
   "LOG",
+  "NOT",
+  "LENGTH",
   "ceiling",
   "floor",
   "abs",
@@ -57,8 +59,8 @@ let funs = [
   "sqrt",
   "ln",
   "log",
-  "NOT",
   "not",
+  "length"
 ];
 
 // Array of functions with no arguments
@@ -71,6 +73,7 @@ let funs2 = [
   "SQRT",
   "LN",
   "NOT",
+  "LENGTH",
   "ceiling",
   "floor",
   "abs",
@@ -78,7 +81,8 @@ let funs2 = [
   "exp",
   "sqrt",
   "ln",
-  "not"
+  "not",
+  "length"
 ];
 
 /**
@@ -95,7 +99,7 @@ export function validate(str, vars) {
   // Loop to identify operator strings
   for (var j = 0; j < len; j++) {
     // If operator char, append to op
-    if (!(/[a-zA-Z0-9.,\s()\\-]/.test(str[j]))) {
+    if (!(/[a-zA-Z0-9.,'\s()\\-]/.test(str[j]))) {
       op = op + str[j];
       if (j == len - 1 || j == 0) {
         return false;
@@ -111,7 +115,7 @@ export function validate(str, vars) {
       var op_l = j - op.length - 1;
       while(lsearch) {
         if (!(/[\s]/.test(str[op_l]))) {
-          if (!(/[a-zA-Z0-9.,)\\-]/.test(str[op_l]))) {
+          if (!(/[a-zA-Z0-9.,')\\-]/.test(str[op_l]))) {
             return false;
           }
           lsearch = false;
@@ -127,7 +131,7 @@ export function validate(str, vars) {
       }
       while(rsearch) {
         if (!(/[\s]/.test(str[op_r]))) {
-          if (!(/[a-zA-Z0-9.(\\-]/.test(str[op_r]))) {
+          if (!(/[a-zA-Z0-9.'(\\-]/.test(str[op_r]))) {
             return false;
           }
           rsearch = false;
@@ -146,33 +150,47 @@ export function validate(str, vars) {
   var lcount = 0;
   var rcount = 0;
   var substr = "";
-  // Loop to checks parenthesis and identify non-operator strings
+  var instring = false;
+  // Loop to checks parenthesis, identify non-operator strings and check strings
   for (var i = 0; i < len; i++) {
-    if (str[i] == "(") {
-      lcount += 1;
+    if (str[i] == "'" && !instring) {
+      // Check for quote start
+      instring = true;
+    } else if (str[i] == "'" && instring &&
+        ((i == 0) || (i > 0 && str[i - 1] != '\\'))) {
+      // Check for quote end unless the quote is escaped
+      instring = false;
     }
-    if (str[i] == ")") {
-      rcount += 1;
-    }
-    if (rcount > lcount) {
-      return false;
-    }
-    // If usable char, add to substring
-    if (/[a-zA-Z0-9]/.test(str[i])) {
-      substr = substr + str[i];
-    }
-    // Checks if substring is valid
-    if ((str[i + 1] == null || !(/[[a-zA-Z0-9]/.test(str[i + 1])))) {
-      if ((funs.includes(substr) && str[i + 1] == "(") || substr == "") {
-        substr = "";
-      } else if (vars.includes(substr) || (ops.includes(substr) || !(isNaN(substr)))) {
-        substr = "";
-      } else {
+
+    if (!instring) {
+      if (str[i] == "(") {
+        lcount += 1;
+      }
+      if (str[i] == ")") {
+        rcount += 1;
+      }
+      if (rcount > lcount) {
         return false;
+      }
+      // If usable char, add to substring
+      if (/[a-zA-Z0-9]/.test(str[i])) {
+        substr = substr + str[i];
+      }
+      // Checks if substring is valid
+      if ((str[i + 1] == null || !(/[[a-zA-Z0-9]/.test(str[i + 1])))) {
+        if ((funs.includes(substr) && str[i + 1] == "(") || substr == "") {
+          substr = "";
+        } else if (vars.includes(substr) || (ops.includes(substr) || !(isNaN(substr)))) {
+          substr = "";
+        } else {
+          return false;
+        }
       }
     }
   }
-  return lcount == rcount;
+
+  // Parentheses must be balanced and quotes should end
+  return (lcount == rcount) && !instring;
 }
 
 /**
@@ -418,7 +436,7 @@ export function varfind(str, vars) {
     if (str[i] == null) {
       end = true;
     } else {
-      if (/[a-zA-Z0-9]/.test(str[i])) {
+      if (/[a-zA-Z0-9']/.test(str[i])) {
         v = v + str[i];
       } else {
         j = i - v.length;

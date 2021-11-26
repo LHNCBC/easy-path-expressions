@@ -2,6 +2,10 @@
 
 This project follows [Semantic Versioning](http://semver.org/).
 
+## [2.1.0] 2021-11-24
+### Added
+- Added support for strings.
+
 ## [2.0.0] 2021-10-01
 ### Changed
 - Changed package name to `easy-path-expressions`.
