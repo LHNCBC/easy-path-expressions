@@ -559,7 +559,7 @@ function indexofoutsidequotes(str, stringparts, value) {
  * @param replaceall {boolean} - Replace all matches. Default false.
  * @return {string} - String with matches replaced outside of quotes
  */
-export function replaceoutsidequotes(str, stringparts, searchvalue, replacevalue, replaceall = false) {
+function replaceoutsidequotes(str, stringparts, searchvalue, replacevalue, replaceall = false) {
   var insidequote = false;
   var searchindex = 0;
   var tmpstr = str.split('');
