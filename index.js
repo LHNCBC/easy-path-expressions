@@ -99,7 +99,7 @@ export function validate(str, vars) {
   // Loop to identify operator strings
   for (var j = 0; j < len; j++) {
     // If operator char, append to op
-    if (!(/[a-zA-Z0-9.,'\s()\\-]/.test(str[j]))) {
+    if (!(/[a-zA-Z0-9.,'"\s()\\-]/.test(str[j]))) {
       op = op + str[j];
       if (j == len - 1 || j == 0) {
         return false;
@@ -115,7 +115,7 @@ export function validate(str, vars) {
       var op_l = j - op.length - 1;
       while(lsearch) {
         if (!(/[\s]/.test(str[op_l]))) {
-          if (!(/[a-zA-Z0-9.,')\\-]/.test(str[op_l]))) {
+          if (!(/[a-zA-Z0-9.,'")\\-]/.test(str[op_l]))) {
             return false;
           }
           lsearch = false;
@@ -131,7 +131,7 @@ export function validate(str, vars) {
       }
       while(rsearch) {
         if (!(/[\s]/.test(str[op_r]))) {
-          if (!(/[a-zA-Z0-9.'(\\-]/.test(str[op_r]))) {
+          if (!(/[a-zA-Z0-9.'"(\\-]/.test(str[op_r]))) {
             return false;
           }
           rsearch = false;
@@ -153,14 +153,7 @@ export function validate(str, vars) {
   var instring = false;
   // Loop to checks parenthesis, identify non-operator strings and check strings
   for (var i = 0; i < len; i++) {
-    if (str[i] == "'" && !instring) {
-      // Check for quote start
-      instring = true;
-    } else if (str[i] == "'" && instring &&
-        ((i == 0) || (i > 0 && str[i - 1] != '\\'))) {
-      // Check for quote end unless the quote is escaped
-      instring = false;
-    }
+    instring = isinstring(str, i, instring);
 
     if (!instring) {
       if (str[i] == "(") {
@@ -200,8 +193,11 @@ export function validate(str, vars) {
  */
 export function convert(str) {
   var count = 0;
-  if (str.includes("^")) {
-    var i = str.indexOf("^");
+  var stringminusquotes = getstringminusquotes(str);
+  var stringparts = getstringparts(str);
+
+  if (stringminusquotes.includes("^")) {
+    var i = indexofoutsidequotes(str, stringparts, "^");
     var base = lfind(str, i);
     var power = rfind(str, i);
     str =
@@ -213,8 +209,8 @@ export function convert(str) {
       str.slice(i + power.length + 1);
     count += 1;
   }
-  if (str.includes("**")) {
-    var i = str.indexOf("**");
+  if (stringminusquotes.includes("**")) {
+    var i = indexofoutsidequotes(str, stringparts, "**");
     var base = lfind(str, i);
     var power = rfind(str, i+1);
     str =
@@ -227,39 +223,43 @@ export function convert(str) {
     count += 1;
   }
   for (let f = 0; f < funs2.length; f++) {
-    if (str.includes(funs2[f])) {
-      if (str[str.indexOf(funs2[f]) - 1] != ".") {
+    if (stringminusquotes.includes(funs2[f])) {
+      if (str[indexofoutsidequotes(str, stringparts, funs2[f]) - 1] != ".") {
         str = funcappend(str, funs2[f]);
         count += 1;
       }
     }
   }
-  if (str.includes("LOG")) {
+  if (stringminusquotes.includes("LOG")) {
     str = logappend(str, "LOG");
     count += 1;
   }
-  if (str.includes("log")) {
-    if (str[str.indexOf("log") - 1] != ".") {
+  if (stringminusquotes.includes("log")) {
+    if (str[indexofoutsidequotes(str, stringparts, "log") - 1] != ".") {
       str = logappend(str, "log");
       count += 1;
     }
   }
   if (str.includes("OR")) {
-    str = str.replace("OR", "or");
+    str = replaceoutsidequotes(str, stringparts, "OR", "or");
     count += 1;
   }
   if (str.includes("AND")) {
-    str = str.replace("AND", "and");
+    str = replaceoutsidequotes(str, stringparts, "AND", "and");
     count += 1;
   }
   if (str.includes("||")) {
-    str = str.replace("||", "or");
+    str = replaceoutsidequotes(str, stringparts, "||", "or");
     count += 1;
   }
   if (str.includes("&&")) {
-    str = str.replace("&&", "and");
+    str = replaceoutsidequotes(str, stringparts, "&&", "and");
     count += 1;
   }
+
+  // Replace double quotes with single quotes
+  str = replaceoutsidequotes(str, stringparts, '"', "'", true);
+
   if (count != 0) {
     return convert(str);
   } else {
@@ -311,7 +311,8 @@ export function funcappend(str, func) {
  * @returns expression with converted log function
  */
 export function logappend(str, func) {
-  var i = str.indexOf(func);
+  var stringparts = getstringparts(str);
+  var i = indexofoutsidequotes(str, stringparts, func);
   var j = i + 3;
   var k = j;
   var cma = -1;
@@ -436,7 +437,7 @@ export function varfind(str, vars) {
     if (str[i] == null) {
       end = true;
     } else {
-      if (/[a-zA-Z0-9']/.test(str[i])) {
+      if (/[a-zA-Z0-9'"]/.test(str[i])) {
         v = v + str[i];
       } else {
         j = i - v.length;
@@ -457,4 +458,127 @@ export function varfind(str, vars) {
     }
   }
   return str;
+}
+
+/**
+ * Check to see if we're in a string given the current status, string and
+ * position
+ * @param str {string} - string to check
+ * @param i {number} - current string index
+ * @param instring {boolean} - current status for in string
+ * @return {boolean} - in string
+ */
+function isinstring(str, i, instring) {
+  var isquote = str[i] == "'" || str[i] =='"';
+
+  if (isquote && !instring) {
+    // Check for quote start
+    return true;
+  } else if (isquote && instring &&
+      ((i == 0) || (i > 0 && str[i - 1] != '\\'))) {
+    // Check for quote end unless the quote is escaped
+    return false;
+  } else {
+    return instring;
+  }
+}
+
+/**
+ * Get the parts of the string which are quotes
+ * @param str - String to check
+ * @return Array of booleans representing if position is part of quotes (which
+ *  should not be processed)
+ */
+function getstringparts(str) {
+  var parts = [];
+  var instring = false;
+
+  for (var i = 0; i < str.length; i++) {
+    instring = isinstring(str, i, instring);
+
+    parts.push(instring);
+  }
+
+  return parts;
+}
+
+/**
+ * Get only the parts of the string which do are not quotes
+ * @param str {string} - String to process
+ * @return {string} - String without quotes
+ */
+function getstringminusquotes(str) {
+  var parts = [];
+  var instring = false;
+
+  for (var i = 0; i < str.length; i++) {
+    instring = isinstring(str, i, instring);
+
+    if (!instring) {
+      parts.push(str[i]);
+    }
+  }
+
+  return parts.join('');
+}
+
+/**
+ * Get the index for the search value but ignore quotes
+ * @param str {string} - String to search
+ * @param stringparts - Array of booleans indicating if inside string.
+ *  Use `getstringparts`
+ * @param value {string} - Value to look for
+ * @return {number} - Index of match, -1 if none (not including quotes)
+ */
+function indexofoutsidequotes(str, stringparts, value) {
+  var insidequote = false;
+  var searchindex = 0;
+
+  do {
+    var index = str.indexOf(value, searchindex);
+
+    if (index !== -1 && stringparts[index]) {
+      // The index fell as part of a quote, we should find the next match
+      insidequote = true;
+      searchindex = index + 1;
+    } else {
+      insidequote = false;
+    }
+  } while (index !== -1 && insidequote);
+
+  return index;
+}
+
+/**
+ * Replace values not inside quotes
+ * @param str {string} - String to search
+ * @param stringparts - Array of booleans indicating if inside string.
+ *  Use `getstringparts`
+ * @param searchvalue {string} - Value to look for
+ * @param replacevalue {string} - Value to replace with
+ * @param replaceall {boolean} - Replace all matches. Default false.
+ * @return {string} - String with matches replaced outside of quotes
+ */
+export function replaceoutsidequotes(str, stringparts, searchvalue, replacevalue, replaceall = false) {
+  var insidequote = false;
+  var searchindex = 0;
+  var tmpstr = str.split('');
+
+  do {
+    var index = str.indexOf(searchvalue, searchindex);
+
+    if (index !== -1 && stringparts[index] && searchvalue !== '"') {
+      // The index fell as part of a quote, we should find the next match
+      // Special case when replacing surrounding quotes
+      insidequote = true;
+      searchindex = index + 1;
+    } else if (index !== -1) {
+      insidequote = false;
+      tmpstr.splice(index, searchvalue.length, ...replacevalue.split(''));
+      searchindex += searchvalue.length - replacevalue.length;
+      str = tmpstr.join('');
+    }
+  } while (index !== -1 && replaceall);
+
+  return tmpstr.join('');
 }
