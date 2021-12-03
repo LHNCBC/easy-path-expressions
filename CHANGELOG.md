@@ -2,7 +2,10 @@
 
 This project follows [Semantic Versioning](http://semver.org/).
 
-## [2.1.0] 2021-11-24
+## [3.0.0] 2021-11-24
+### Changed
+- Renamed the function `fhirconvert` to `fhirConvert`
+- Un-exported utility functions
 ### Added
 - Added support for strings.
 

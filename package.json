@@ -1,6 +1,6 @@
 {
   "name": "easy-path-expressions",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "type": "module",
   "description": "Easy-path-expressions is a syntax parser that converts basic mathematical expressions into FHIRPath notation.",
   "main": "index.js",
@@ -16,5 +16,8 @@
   },
   "directories": {
     "test": "test"
+  },
+  "bin": {
+    "easy-path-expressions": "bin/easy-path-expressions.mjs"
   }
 }
