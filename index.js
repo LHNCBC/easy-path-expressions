@@ -151,9 +151,10 @@ function validate(str, vars) {
   let rCount = 0;
   let substr = "";
   let inString = false;
+  let inEscape = false;
   // Loop to checks parenthesis, identify non-operator strings and check strings
   for (let i = 0; i < len; i++) {
-    inString = isInString(str, i, inString);
+    ({ inString, inEscape } = isInString(str, i, inString, inEscape));
 
     if (!inString) {
       if (str[i] === "(") {
@@ -474,21 +475,26 @@ function varFind(str, vars) {
  * @param str {string} - string to check
  * @param i {number} - current string index
  * @param inString {boolean} - current status for in string
- * @return {boolean} - True if the position i is inside a string
+ * @param inEscape {boolean} - current status for escape
+ * @return {{inString: boolean, inEscape: boolean}} inString true if position i
+ *  is inside a string, inEscape true if position i is in an escape sequence
  */
-function isInString(str, i, inString) {
+function isInString(str, i, inString, inEscape) {
   const isQuote = str[i] === "'" || str[i] === '"';
 
   if (isQuote && !inString) {  // Check for quote start
-    return true;
-  } else if (isQuote && inString &&
-      ((i === 0) || (i > 0 && str[i - 1] !== "\\") ||
-       (i > 1 && str[i - 1] === "\\" && str[i - 2] === "\\"))) {
-    // Check for quote end unless the quote is escaped
-    // Also check if the escape is escaped itself
-    return false;
-  } else {
-    return inString;
+    inString = true;
+  } else if (isQuote && inString && !inEscape) {
+    inString = false;
+  } else if (inString && inEscape) {
+    inEscape = false;
+  } else if (inString && !inEscape && str[i] === "\\") {
+    inEscape = true;
+  }
+
+  return {
+    inString,
+    inEscape
   }
 }
 
@@ -501,9 +507,10 @@ function isInString(str, i, inString) {
 function getStringParts(str) {
   const parts = [];
   let inString = false;
+  let inEscape = false;
 
   for (let i = 0; i < str.length; i++) {
-    inString = isInString(str, i, inString);
+    ({ inString, inEscape } = isInString(str, i, inString, inEscape));
 
     parts.push(inString);
   }
@@ -519,9 +526,10 @@ function getStringParts(str) {
 function getStringMinusQuotes(str) {
   const parts = [];
   let inString = false;
+  let inEscape = false;
 
   for (let i = 0; i < str.length; i++) {
-    inString = isInString(str, i, inString);
+    ({inString, inEscape} = isInString(str, i, inString, inEscape));
 
     if (!inString) {
       parts.push(str[i]);

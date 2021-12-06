@@ -215,7 +215,9 @@ describe("#fhirConvert()", function () {
       expect(fhir.fhirConvert("'Test'", [])).to.equal("'Test'");
       expect(fhir.fhirConvert('"Test"', [])).to.equal("'Test'");
       expect(fhir.fhirConvert("'Test\\'1'", [])).to.equal("'Test\\'1'");
-      expect(fhir.fhirConvert("'Test\\\\'", [])).to.equal("'Test\\\\'")
+      expect(fhir.fhirConvert("'Test\\\\'", [])).to.equal("'Test\\\\'");
+      expect(fhir.fhirConvert("'Test\\\\\\''", [])).to.equal("'Test\\\\\\''");
+      expect(fhir.fhirConvert("'Test\\\\\\\\'", [])).to.equal("'Test\\\\\\\\'");
       expect(fhir.fhirConvert("'a' + 'b'", [])).to.equal("'a' + 'b'");
       expect(fhir.fhirConvert('"a" + "b"', [])).to.equal("'a' + 'b'");
       expect(fhir.fhirConvert('"a" + \'b\'', [])).to.equal("'a' + 'b'");
