@@ -2,6 +2,13 @@
 
 This project follows [Semantic Versioning](http://semver.org/).
 
+## [3.0.0] 2021-11-24
+### Changed
+- Renamed the function `fhirconvert` to `fhirConvert`
+- Un-exported utility functions
+### Added
+- Added support for strings.
+
 ## [2.0.0] 2021-10-01
 ### Changed
 - Changed package name to `easy-path-expressions`.
