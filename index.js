@@ -99,7 +99,7 @@ function validate(str, vars) {
   // Loop to identify operator strings
   for (let j = 0; j < len; j++) {
     // If operator char, append to op
-    if (!(/[a-zA-Z0-9.,'"\s()\\-]/.test(str[j]))) {
+    if (!(/[a-zA-Z0-9.,'"\s()_\\-]/.test(str[j]))) {
       op = op + str[j];
       if (j === len - 1 || j === 0) {
         return false;
@@ -152,7 +152,7 @@ function validate(str, vars) {
   let substr = "";
   let inString = false;
   let inEscape = false;
-  // Loop to checks parenthesis, identify non-operator strings and check strings
+  // Loop to check parenthesis, identify non-operator strings and check strings
   for (let i = 0; i < len; i++) {
     ({ inString, inEscape } = isInString(str, i, inString, inEscape));
 
@@ -167,11 +167,11 @@ function validate(str, vars) {
         return false;
       }
       // If usable char, add to substring
-      if (/[a-zA-Z0-9]/.test(str[i])) {
+      if (/[a-zA-Z0-9_]/.test(str[i])) {
         substr = substr + str[i];
       }
       // Checks if substring is valid
-      if ((str[i + 1] == null || !(/[[a-zA-Z0-9]/.test(str[i + 1])))) {
+      if ((str[i + 1] == null || !(/[[a-zA-Z0-9_]/.test(str[i + 1])))) {
         if ((functions.includes(substr) && str[i + 1] === "(") || substr === "") {
           substr = "";
         } else if (vars.includes(substr) || (ops.includes(substr) || !(isNaN(substr)))) {
@@ -446,7 +446,7 @@ function varFind(str, vars) {
     if (str[i] == null) {
       end = true;
     } else {
-      if (/[a-zA-Z0-9'"]/.test(str[i])) {
+      if (/[a-zA-Z0-9_'"]/.test(str[i])) {
         v = v + str[i];
       } else {
         j = i - v.length;
