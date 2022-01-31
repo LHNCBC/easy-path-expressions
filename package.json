@@ -1,6 +1,6 @@
 {
   "name": "easy-path-expressions",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "type": "module",
   "description": "Easy-path-expressions is a syntax parser that converts basic mathematical expressions into FHIRPath notation.",
   "main": "index.js",
@@ -11,7 +11,7 @@
   "license": "SEE LICENSE IN LICENSE.md",
   "devDependencies": {
     "chai": "^4.3.4",
-    "mocha": "^9.1.3",
+    "mocha": "^9.2.0",
     "prettier": "2.2.1"
   },
   "directories": {

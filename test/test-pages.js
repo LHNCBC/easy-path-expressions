@@ -4,7 +4,7 @@ let expect = chai.expect;
 
 let vars = ["a", "b", "c", "d", "e"];
 let vars2 = ["Patient", "HeartRate", "Age"];
-let vars3 = ["Patient1", "HeartRate2", "Age3"];
+let vars3 = ["Patient1", "HeartRate2", "Age3", "Test_underscore4"];
 
 describe("#fhirConvert()", function () {
   context("Exponent", function () {
@@ -43,6 +43,7 @@ describe("#fhirConvert()", function () {
   context("Functions", function () {
     it("CEILING", function () {
       expect(fhir.fhirConvert("CEILING(a)", vars)).to.equal("(%a).ceiling()");
+      expect(fhir.fhirConvert("CEILING(Test_underscore4)", vars3)).to.equal("(%Test_underscore4).ceiling()");
     });
     it("CEILING Exp", function () {
       expect(fhir.fhirConvert("CEILING(a+b*3)", vars)).to.equal(
@@ -207,13 +208,17 @@ describe("#fhirConvert()", function () {
     });
     it("String vars3 1", function () {
       expect(fhir.fhirConvert("Patient1 + Age3", vars3)).to.equal("%Patient1 + %Age3");
+      expect(fhir.fhirConvert("Test_underscore4 + Age3", vars3)).to.equal("%Test_underscore4 + %Age3");
+      expect(fhir.fhirConvert("Age3 + Test_underscore4", vars3)).to.equal("%Age3 + %Test_underscore4");
     });
   });
 
   context("Strings", function () {
     it("simple", function () {
       expect(fhir.fhirConvert("'Test'", [])).to.equal("'Test'");
+      expect(fhir.fhirConvert("'_Test_'", [])).to.equal("'_Test_'");
       expect(fhir.fhirConvert('"Test"', [])).to.equal("'Test'");
+      expect(fhir.fhirConvert('"_Test_"', [])).to.equal("'_Test_'");
       expect(fhir.fhirConvert("'Test\\'1'", [])).to.equal("'Test\\'1'");
       expect(fhir.fhirConvert("'Test\\\\'", [])).to.equal("'Test\\\\'");
       expect(fhir.fhirConvert("'Test\\\\\\''", [])).to.equal("'Test\\\\\\''");

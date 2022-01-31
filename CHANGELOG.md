@@ -2,6 +2,10 @@
 
 This project follows [Semantic Versioning](http://semver.org/).
 
+## [3.1.0] 2022-01-27
+### Added
+- Added support for underscores in variable names
+
 ## [3.0.0] 2021-11-24
 ### Changed
 - Renamed the function `fhirconvert` to `fhirConvert`
